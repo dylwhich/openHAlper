@@ -8,6 +8,32 @@ import threading
 import os.path
 import json
 
+try:
+    raise TimeoutExpired()
+except NameError:
+    class TimeoutExpired(Exception):
+        pass
+    subprocess.TimeoutExpired = TimeoutExpired
+
+try:
+    subprocess.check_output(["true"], timeout=60)
+except TypeError:
+    subprocess.__real__check_output = subprocess.check_output
+    def co_proxy(*args, **kwargs):
+        if "timeout" in kwargs:
+            del kwargs["timeout"]
+        return subprocess.__real__check_output(*args, **kwargs)
+    subprocess.check_output = co_proxy
+except CalledProcessError:
+    pass
+
+try:
+    raise FileNotFoundError()
+except NameError:
+    FileNotFoundError = IOError
+except:
+    pass
+
 ACTIONS = {
     "temp": {
         "exec": ["temp", "24"],
