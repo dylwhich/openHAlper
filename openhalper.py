@@ -66,6 +66,10 @@ for conf_file in "/etc/openhalper.conf", os.path.expanduser("~/.config/openhalpe
                     ACTIONS.update(conf["actions"])
     except FileNotFoundError:
         pass
+    except OSError:
+        pass
+    except IOError:
+        pass
 
 if len(sys.argv) > 1:
     PORT = int(sys.argv[1])
