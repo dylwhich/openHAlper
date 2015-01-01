@@ -52,11 +52,17 @@ def init_intervals():
 
 def do_action(name, **kwargs):
     item = ACTIONS[name]
+    result = ""
     if "exec" in item:
         try:
-            result = subprocess.check_output([arg.format(kwargs) for arg in item["exec"]], timeout=10).decode('ascii')
+            args = item["exec"]
+            try:
+                args = [arg.format(kwargs) for arg in item["exec"]]
+            except:
+                args = item["exec"].format(kwargs)
+            result = subprocess.check_output(args, timeout=10, shell=(item["shell"] if "shell" in item else False)).decode('ascii')
         except subprocess.CalledProcessError as e:
-            return e.returncode
+            return "Error: {}".format(e.returncode)
         except subprocess.TimeoutExpired:
             return "Timed out"
     elif "func" in item:
