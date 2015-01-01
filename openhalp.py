@@ -5,6 +5,8 @@ import flask
 from time import sleep, time as now
 import subprocess
 import threading
+import os.path
+import json
 
 ACTIONS = {
     "temp": {
@@ -23,6 +25,22 @@ ACTIONS = {
         "exec": ["espeak", "{[text]}"],
     },
 }
+
+PORT = 8081
+
+for conf_file in "/etc/openhalper.conf", os.path.expanduser("~/.config/openhalper.conf"), "./openhalper.conf":
+    try:
+        with open(conf_file) as f:
+            conf = json.load(f)
+            if "port" in conf:
+                PORT = conf["port"]
+                if "actions" in conf:
+                    ACTIONS.update(conf["actions"])
+    except FileNotFoundError:
+        pass
+
+if len(sys.argv) > 1:
+    PORT = int(sys.argv[1])
 
 NEXT_UPDATES = {}
 CACHE = {}
@@ -89,4 +107,4 @@ def serve(name):
     else:
         return "Page not found", 404
 
-app.run('0.0.0.0', port=int(sys.argv[1]), debug=True)
+app.run('0.0.0.0', port=PORT, debug=True)
