@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 import sys
 import flask
@@ -48,7 +48,9 @@ ACTIONS = {
         "lifetime": 15
     },
     "say": {
-        "exec": ["espeak", "{[text]}"],
+        "exec": 'echo {[text]} | espeak --stdin',
+        "parse": lambda r: r,
+        "shell": True
     },
 }
 
