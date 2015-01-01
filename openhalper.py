@@ -49,7 +49,7 @@ ACTIONS = {
     },
     "say": {
         "exec": 'echo {[text]} | espeak --stdin --stdout | aplay',
-        "parse": lambda r: r,
+        "parse": lambda r: "",
         "shell": True
     },
 }
