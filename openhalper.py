@@ -48,7 +48,7 @@ ACTIONS = {
         "lifetime": 15
     },
     "say": {
-        "exec": 'echo {[text]} | espeak --stdin',
+        "exec": 'echo {[text]} | espeak --stdin --stdout | aplay',
         "parse": lambda r: r,
         "shell": True
     },
