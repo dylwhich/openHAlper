@@ -37,13 +37,15 @@ except:
 ACTIONS = {
     "temp": {
         "exec": ["temp", "24"],
-        "parse": lambda r: r.split()[0],
+        "parse": lambda r: float(r.split()[0]),
+        "validate": lambda r: r > 0 and r < 40,
         "interval": 60,
         "lifetime": 15
     },
     "hum": {
         "exec": ["temp",  "24"],
-        "parse": lambda r: r.split()[1],
+        "parse": lambda r: float(r.split()[1]),
+        "validate": lambda r: r > 0 and r <= 100,
         "interval": 60,
         "lifetime": 15
     },
@@ -85,46 +87,65 @@ def init_intervals():
 def do_action(name, **kwargs):
     item = ACTIONS[name]
     result = ""
-    if "exec" in item:
-        try:
-            args = item["exec"]
+    valid = True
+    for i in range(10):
+        if "exec" in item:
             try:
-                args = [arg.format(kwargs) for arg in item["exec"]]
-            except:
-                args = item["exec"].format(kwargs)
-            result = subprocess.check_output(args, timeout=10, shell=(item["shell"] if "shell" in item else False)).decode('ascii')
-        except subprocess.CalledProcessError as e:
-            return "Error: {}".format(e.returncode)
-        except subprocess.TimeoutExpired:
-            return "Timed out"
-    elif "func" in item:
-        result = item["func"](**kwargs)
+                args = item["exec"]
+                try:
+                    args = [arg.format(kwargs) for arg in item["exec"]]
+                except:
+                    args = item["exec"].format(kwargs)
+
+                result = subprocess.check_output(args, timeout=10, shell=(item["shell"] if "shell" in item else False)).decode('ascii')
+            except subprocess.CalledProcessError as e:
+                return "Error: {0}".format(e.returncode)
+            except subprocess.TimeoutExpired:
+                return "Timed out"
+        elif "func" in item:
+            result = item["func"](**kwargs)
+        else:
+            result = None
+
+        if "parse" in item:
+            result = item["parse"](result)
+
+        if "validate" in item:
+            if item["validate"](result):
+                break
+        else:
+            break
     else:
-        result = None
+        valid = False
 
-    if "parse" in item:
-        result = item["parse"](result)
+    return result, valid
 
-    return result
-            
 def do_update():
     for name, time in NEXT_UPDATES.items():
         if time <= now():
-            CACHE[name] = {"value": do_action(name), "time": now()}
+            res, valid = do_action(name)
+            if valid:
+                CACHE[name] = {"value": res, "time": now()}
+            else:
+                print("do_update: Not caching request for {0}, it was invalid ({1})".format(name, res))
             NEXT_UPDATES[name] = now() + ACTIONS[name]["interval"]
 
     next = min([v for k, v in NEXT_UPDATES.items()])
     if next > now():
         sleep(next - now())
 
-def handle_request(item):
+def handle_request(item, **args):
     if item in CACHE:
         if "cache" in ACTIONS[item]:
             if CACHE[item]["time"] + ACTIONS[item]["lifetime"] < now():
                 return CACHE[item]["value"]
 
-    CACHE[item] = {"value": do_action(name), "time": now()}
-    return CACHE[item]["value"]
+    res, valid = do_action(item, **args)
+    if valid:
+        CACHE[item] = {"value": res, "time": now()}
+    else:
+        print("handle_request: Not caching request for {0}, it was invalid ({1})".format(item, res))
+    return str(res)
 
 def update():
     init_intervals()
@@ -141,7 +162,7 @@ app = flask.Flask(__name__)
 def serve(name):
     if name in ACTIONS:
         args = flask.request.args
-        return do_action(name, **args)
+        return handle_request(name, **args)
     else:
         return "Page not found", 404
 
