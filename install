@@ -1,0 +1,8 @@
+#!/bin/bash
+test "$UID" -eq "0" || echo "You must be root." || exit 1
+echo "Installing script"
+install -m 755 openhalper.py /usr/local/bin/openhalper.py
+echo "Installing systemd file"
+test -d /usr/lib/systemd && install -m 644 openhalper.service /usr/lib/systemd/system/openhalper.service
+echo "Creating user"
+id openhalper || useradd -MrUG audio openhalper

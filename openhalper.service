@@ -1,0 +1,7 @@
+[Unit]
+Description=Remote helper script for OpenHAB actions
+
+[Service]
+Type=normal
+ExecStart=/usr/local/bin/openhalper.py
+User=openhalper
