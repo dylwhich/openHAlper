@@ -10,6 +10,9 @@ import json
 import RPi.GPIO as GPIO
 import requests
 
+GPIO.setmode(GPIO.BOARD)
+GPIO.setwarnings(False)
+
 try:
     raise TimeoutExpired()
 except NameError:
@@ -62,12 +65,18 @@ ACTIONS = {
     "gpio_in": {
         "type": "gpio_in",
         "pin": 3,
-        "url": "http://test.url.com/rest/items/Test_Gpio/state",
-        "interval": 0.5,
+        "url": "http://vegasix.xn--hackaf-gva.net:8081/rest/items/Kitchen_Button_Button/state",
+        "interval": 0.1,
+        "state": 0
     },
-    "gpio_out": {
+    "led": {
         "type": "gpio_out",
         "pin": 5
+    },
+    "furnace": {
+        "type": "gpio_out",
+        "state": False,
+        "pin": 7
     },
 }
 
@@ -137,12 +146,21 @@ def do_action(name, **kwargs):
             if item["validate"](result):
                 break
         if item['type'] == "gpio_in":
-            if GPIO.event_detected(item['pin']):
-                item['state'] = GPIO.input(item['pin'])
+            newstate = GPIO.input(item['pin'])
+            if item['state'] != newstate:
                 payload = "OPEN" if item['state'] else "CLOSED"
-                requests.put(item['url'], data=payload)
+                print("state", newstate, item['state'])
+                print(requests.put(item['url'], data=payload))
+            item['state'] = newstate
+            result = item['state']
         if item['type'] == "gpio_out":
-            GPIO.output(item['pin'], kwargs['state'])
+            if 'state' in kwargs:
+              result = bool(int(kwargs['state'][0]))
+              GPIO.output(item['pin'], result)
+              item['state'] = result
+            else:
+              result = item['state']
+            break
         else:
             break
     else:
@@ -197,4 +215,4 @@ def serve(name):
     else:
         return "Page not found", 404
 
-app.run('0.0.0.0', port=PORT, debug=True)
+app.run('0.0.0.0', port=PORT, debug=False)
