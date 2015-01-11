@@ -7,6 +7,8 @@ import subprocess
 import threading
 import os.path
 import json
+import RPi.GPIO as GPIO
+import requests
 
 try:
     raise TimeoutExpired()
@@ -36,6 +38,7 @@ except:
 
 ACTIONS = {
     "temp": {
+        "type": "temp",
         "exec": ["temp", "24"],
         "parse": lambda r: float(r.split()[0]),
         "validate": lambda r: r > 0 and r < 40,
@@ -43,6 +46,7 @@ ACTIONS = {
         "lifetime": 15
     },
     "hum": {
+        "type": "hum",
         "exec": ["temp",  "24"],
         "parse": lambda r: float(r.split()[1]),
         "validate": lambda r: r > 0 and r <= 100,
@@ -50,9 +54,20 @@ ACTIONS = {
         "lifetime": 15
     },
     "say": {
+        "type": "speak",
         "exec": 'echo {[text]} | espeak --stdin --stdout | aplay',
         "parse": lambda r: "",
         "shell": True
+    },
+    "gpio_in": {
+        "type": "gpio_in",
+        "pin": 3,
+        "url": "http://test.url.com/rest/items/Test_Gpio/state",
+        "interval": 0.5,
+    },
+    "gpio_out": {
+        "type": "gpio_out",
+        "pin": 5
     },
 }
 
@@ -78,6 +93,14 @@ if len(sys.argv) > 1:
 
 NEXT_UPDATES = {}
 CACHE = {}
+
+def start_io():
+    for name, item in ACTIONS.items():
+        if item['type'] == "gpio_out":
+            GPIO.setup(item['pin'], GPIO.OUT)
+        if item['type'] == "gpio_in":
+            GPIO.setup(item['pin'], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.add_event_detect(item['pin'], GPIO.BOTH)
 
 def init_intervals():
     for name, item in ACTIONS.items():
@@ -113,6 +136,13 @@ def do_action(name, **kwargs):
         if "validate" in item:
             if item["validate"](result):
                 break
+        if item['type'] == "gpio_in":
+            if GPIO.event_detected(item['pin']):
+                item['state'] = GPIO.input(item['pin'])
+                payload = "OPEN" if item['state'] else "CLOSED"
+                requests.put(item['url'], data=payload)
+        if item['type'] == "gpio_out":
+            GPIO.output(item['pin'], kwargs['state'])
         else:
             break
     else:
@@ -148,6 +178,7 @@ def handle_request(item, **args):
     return str(res)
 
 def update():
+    start_io()
     init_intervals()
     while True:
         do_update()
