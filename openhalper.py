@@ -66,6 +66,7 @@ ACTIONS = {
         "type": "gpio_in",
         "pin": 3,
         "url": "http://vegasix.xn--hackaf-gva.net:8081/rest/items/Kitchen_Button_Button/state",
+        "method": put,
         "interval": 0.1,
         "state": 0
     },
