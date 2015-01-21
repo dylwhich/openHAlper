@@ -148,9 +148,17 @@ def do_action(name, **kwargs):
         if item['type'] == "gpio_in":
             newstate = GPIO.input(item['pin'])
             if item['state'] != newstate:
+                if item['method'].lower() == "put":
+                    method = requests.put
+                elif item['method'].lower() == "get":
+                    method = requests.get
+                elif item['method'].lower() == "post":
+                    method = requests.post
+                else:
+                    method = requests.get
                 payload = "OPEN" if item['state'] else "CLOSED"
                 print("state", newstate, item['state'])
-                print(requests.put(item['url'], data=payload))
+                print(method(item['url'], data=payload))
             item['state'] = newstate
             result = item['state']
         if item['type'] == "gpio_out":
