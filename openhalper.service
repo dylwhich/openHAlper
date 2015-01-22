@@ -2,6 +2,9 @@
 Description=Remote helper script for OpenHAB actions
 
 [Service]
-Type=normal
+Type=simple
 ExecStart=/usr/local/bin/openhalper.py
 User=openhalper
+
+[Install]
+WantedBy=multi-user.target
