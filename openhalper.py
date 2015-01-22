@@ -142,7 +142,6 @@ def do_action(name, **kwargs):
 
         if name in CACHE and CACHE[name]["value"] == result:
             if "always" not in item or not item["always"]:
-                print("{} is still {}, not updating".format(name, result))
                 break
 
         # Reactions
