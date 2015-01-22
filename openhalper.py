@@ -194,9 +194,8 @@ def do_action(name, **kwargs):
             if 'state' in kwargs:
               result = bool(int(kwargs['state'][0]))
               GPIO.output(item['pin'] if 'pin' in item else item['gpio_out'], result)
-              item['state'] = result
             else:
-              result = item['state']
+              result = item['default']
             break
 
         # Don't keep trying if the result is valid
