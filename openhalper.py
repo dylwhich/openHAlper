@@ -180,7 +180,7 @@ def do_update():
                 print("do_update: Not caching request for {0}, it was invalid ({1})".format(name, res))
             NEXT_UPDATES[name] = now() + ACTIONS[name]["interval"]
 
-    next = min([v for k, v in NEXT_UPDATES.items()])
+    next = min([v for k, v in NEXT_UPDATES.items()] + [now() + 600])
     if next > now():
         sleep(max(next - now(), 0))
 
