@@ -89,8 +89,8 @@ for conf_file in "/etc/openhalper.conf", os.path.expanduser("~/.config/openhalpe
             conf = json.load(f)
             if "port" in conf:
                 PORT = conf["port"]
-                if "actions" in conf:
-                    ACTIONS.update(conf["actions"])
+            if "actions" in conf:
+                ACTIONS.update(conf["actions"])
     except FileNotFoundError:
         pass
     except OSError:
