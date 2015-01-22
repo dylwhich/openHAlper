@@ -43,7 +43,7 @@ ACTIONS = {
     "temp": {
         "type": "temp",
         "exec": ["temp", "24"],
-        "parse": lambda r: float(r.split()[0]),
+        "parse": lambda r: float(r.split()[1]),
         "validate": lambda r: r > 0 and r < 40,
         "interval": 60,
         "lifetime": 15
@@ -51,7 +51,7 @@ ACTIONS = {
     "hum": {
         "type": "hum",
         "exec": ["temp",  "24"],
-        "parse": lambda r: float(r.split()[1]),
+        "parse": lambda r: float(r.split()[0]),
         "validate": lambda r: r > 0 and r <= 100,
         "interval": 60,
         "lifetime": 15
