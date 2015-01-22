@@ -40,39 +40,10 @@ except:
     pass
 
 ACTIONS = {
-    "temp": {
-        "exec": ["temp", "24"],
-        "parse": lambda r: float(r.split()[1]),
-        "validate": lambda r: r > 0 and r < 40,
-        "interval": 60,
-        "lifetime": 15,
-        "put": "http://vegasix.xn--hackaf-gva.net:8081/rest/items/Living_Temp/state"
-    },
-    "hum": {
-        "exec": ["temp",  "24"],
-        "parse": lambda r: float(r.split()[0]),
-        "validate": lambda r: r > 0 and r <= 100,
-        "interval": 60,
-        "lifetime": 15
-    },
     "say": {
         "exec": 'echo {[text]} | espeak --stdin --stdout | aplay',
         "parse": lambda r: "",
         "shell": True
-    },
-    "gpio_in": {
-        "gpio_in": 3,
-        "parse": lambda r: "OPEN" if r else "CLOSED",
-        "put": "http://vegasix.xn--hackaf-gva.net:8081/rest/items/Kitchen_Button_Button/state",
-        "interval": 0.1,
-        "state": 0
-    },
-    "led": {
-        "gpio_out": 5
-    },
-    "furnace": {
-        "gpio_out": 7,
-        "state": False,
     },
 }
 
