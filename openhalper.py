@@ -41,15 +41,14 @@ except:
 
 ACTIONS = {
     "temp": {
-        "type": "temp",
         "exec": ["temp", "24"],
         "parse": lambda r: float(r.split()[1]),
         "validate": lambda r: r > 0 and r < 40,
         "interval": 60,
-        "lifetime": 15
+        "lifetime": 15,
+        "put": "http://vegasix.xn--hackaf-gva.net:8081/rest/items/Living_Temp/state"
     },
     "hum": {
-        "type": "hum",
         "exec": ["temp",  "24"],
         "parse": lambda r: float(r.split()[0]),
         "validate": lambda r: r > 0 and r <= 100,
@@ -57,27 +56,23 @@ ACTIONS = {
         "lifetime": 15
     },
     "say": {
-        "type": "speak",
         "exec": 'echo {[text]} | espeak --stdin --stdout | aplay',
         "parse": lambda r: "",
         "shell": True
     },
     "gpio_in": {
-        "type": "gpio_in",
-        "pin": 3,
-        "url": "http://vegasix.xn--hackaf-gva.net:8081/rest/items/Kitchen_Button_Button/state",
-        "method": "put",
+        "gpio_in": 3,
+        "parse": lambda r: "OPEN" if r else "CLOSED",
+        "put": "http://vegasix.xn--hackaf-gva.net:8081/rest/items/Kitchen_Button_Button/state",
         "interval": 0.1,
         "state": 0
     },
     "led": {
-        "type": "gpio_out",
-        "pin": 5
+        "gpio_out": 5
     },
     "furnace": {
-        "type": "gpio_out",
+        "gpio_out": 7,
         "state": False,
-        "pin": 7
     },
 }
 
@@ -98,6 +93,13 @@ for conf_file in "/etc/openhalper.conf", os.path.expanduser("~/.config/openhalpe
     except IOError:
         pass
 
+for action in ACTIONS.values():
+    if "parse" in action and type(action["parse"]) is str:
+        action["parse"] = eval(action["parse"])
+
+    if "validate" in action and type(action["validate"]) is str:
+        action["validate"] = eval(action["validate"])
+
 if len(sys.argv) > 1:
     PORT = int(sys.argv[1])
 
@@ -106,11 +108,16 @@ CACHE = {}
 
 def start_io():
     for name, item in ACTIONS.items():
-        if item['type'] == "gpio_out":
+        if 'type' in item and item['type'] == "gpio_out":
             GPIO.setup(item['pin'], GPIO.OUT)
-        if item['type'] == "gpio_in":
+        elif 'gpio_out' in item:
+            GPIO.setup(item['gpio_out'], GPIO.OUT)
+
+        if 'type' in item and item['type'] == "gpio_in":
             GPIO.setup(item['pin'], GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.add_event_detect(item['pin'], GPIO.BOTH)
+        elif 'gpio_in' in item:
+            GPIO.setup(item['gpio_in'], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 def init_intervals():
     for name, item in ACTIONS.items():
@@ -122,6 +129,8 @@ def do_action(name, **kwargs):
     result = ""
     valid = True
     for i in range(10):
+        # Actions
+
         if "exec" in item:
             try:
                 args = item["exec"]
@@ -137,17 +146,8 @@ def do_action(name, **kwargs):
                 return "Timed out"
         elif "func" in item:
             result = item["func"](**kwargs)
-        else:
-            result = None
-
-        if "parse" in item:
-            result = item["parse"](result)
-
-        if "validate" in item:
-            if item["validate"](result):
-                break
-        if item['type'] == "gpio_in":
-            newstate = GPIO.input(item['pin'])
+        elif "gpio_in" in item or "type" in item and item['type'] == "gpio_in":
+            newstate = GPIO.input(item['pin'] if 'pin' in item else item['gpio_in'])
             if item['state'] != newstate:
                 if item['method'].lower() == "put":
                     method = requests.put
@@ -162,15 +162,39 @@ def do_action(name, **kwargs):
                 print(method(item['url'], data=payload))
             item['state'] = newstate
             result = item['state']
-        if item['type'] == "gpio_out":
+        else:
+            result = None
+
+        if "parse" in item:
+            result = item["parse"](result)
+
+        # Don't do an action if the item doesn't validate, but
+        # do keep trying
+        if "validate" in item and not item["validate"](result):
+            continue
+
+        # Reactions
+
+        if "put" in item:
+            requests.put(item["put"], data=result)
+
+        if "get" in item:
+            requests.get(item["get"], data=result)
+
+        if "post" in item:
+            requests.post(item["post"], data=result)
+
+        if "gpio_out" in item or "type" in item and item['type'] == "gpio_out":
             if 'state' in kwargs:
               result = bool(int(kwargs['state'][0]))
-              GPIO.output(item['pin'], result)
+              GPIO.output(item['pin'] if 'pin' in item else item['gpio_out'], result)
               item['state'] = result
             else:
               result = item['state']
             break
-        else:
+
+        # Don't keep trying if the result is valid
+        if "validate" not in item or item["validate"](result):
             break
     else:
         valid = False
