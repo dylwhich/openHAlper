@@ -163,7 +163,6 @@ def do_action(name, **kwargs):
             result = item["func"](**kwargs)
         elif "gpio_in" in item or "type" in item and item['type'] == "gpio_in":
             result = GPIO.input(item['pin'] if 'pin' in item else item['gpio_in'])
-            item['state'] = result
         else:
             result = None
 
