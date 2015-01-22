@@ -65,10 +65,10 @@ for conf_file in "/etc/openhalper.conf", os.path.expanduser("~/.config/openhalpe
         pass
 
 for action in ACTIONS.values():
-    if "parse" in action and type(action["parse"]) is str:
+    if "parse" in action and type(action["parse"]) is not function:
         action["parse"] = eval(action["parse"])
 
-    if "validate" in action and type(action["validate"]) is str:
+    if "validate" in action and type(action["validate"]) is not function:
         action["validate"] = eval(action["validate"])
 
 if len(sys.argv) > 1:
