@@ -143,7 +143,7 @@ def do_action(name, **kwargs):
     item = ACTIONS[name]
     result = ""
     valid = True
-    for i in range(10):
+    for i in range(item["tries"]) if "tries" in item else range(10):
         # Actions
 
         if "exec" in item:
