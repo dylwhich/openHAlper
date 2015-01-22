@@ -113,11 +113,26 @@ def start_io():
         elif 'gpio_out' in item:
             GPIO.setup(item['gpio_out'], GPIO.OUT)
 
+        pud = GPIO.PUD_UP
+        if 'pull' in item:
+            if item['pull'].lower() == "down":
+                pud = GPIO.PUD_DOWN
+            elif item['pull'] == None:
+                pud = None
+
+        edge = GPIO.BOTH
+        if 'edge' in item:
+            if item['edge'].lower() == "falling":
+                edge = GPIO.FALLING
+            elif item['edge'].lower() == "rising":
+                edge = GPIO.RISING
+
         if 'type' in item and item['type'] == "gpio_in":
-            GPIO.setup(item['pin'], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.add_event_detect(item['pin'], GPIO.BOTH)
+            GPIO.setup(item['pin'], GPIO.IN, pull_up_down=pud)
+            GPIO.add_event_detect(item['pin'], edge)
         elif 'gpio_in' in item:
-            GPIO.setup(item['gpio_in'], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.setup(item['gpio_in'], GPIO.IN, pull_up_down=pud)
+            GPIO.add_event_detect(item['pin'], edge)
 
 def init_intervals():
     for name, item in ACTIONS.items():
