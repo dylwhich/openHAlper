@@ -175,8 +175,12 @@ def do_action(name, **kwargs):
         if "validate" in item and not item["validate"](result):
             continue
 
-        # Reactions
+        if name in CACHE and CACHE[name]["value"] == result:
+            if "always" not in item or not item["always"]:
+                print("{} is still {}, not updating".format(name, result))
+                break
 
+        # Reactions
         if "put" in item:
             requests.put(item["put"], data=str(result))
 
