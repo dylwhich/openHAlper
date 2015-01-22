@@ -79,10 +79,8 @@ CACHE = {}
 
 def start_io():
     for name, item in ACTIONS.items():
-        if 'type' in item and item['type'] == "gpio_out":
-            GPIO.setup(item['pin'], GPIO.OUT)
-        elif 'gpio_out' in item:
-            GPIO.setup(item['gpio_out'], GPIO.OUT)
+        if 'type' in item and item['type'] == "gpio_out" or 'gpio_out' in item:
+            GPIO.setup(item['pin'] if 'pin' in item else item['gpio_out'], GPIO.OUT)
 
         pud = GPIO.PUD_UP
         if 'pull' in item:
@@ -98,12 +96,9 @@ def start_io():
             elif item['edge'].lower() == "rising":
                 edge = GPIO.RISING
 
-        if 'type' in item and item['type'] == "gpio_in":
-            GPIO.setup(item['pin'], GPIO.IN, pull_up_down=pud)
-            GPIO.add_event_detect(item['pin'], edge)
-        elif 'gpio_in' in item:
-            GPIO.setup(item['gpio_in'], GPIO.IN, pull_up_down=pud)
-            GPIO.add_event_detect(item['pin'], edge)
+        if 'type' in item and item['type'] == "gpio_in" or 'gpio_in' in item:
+            GPIO.setup(item['pin'] if 'pin' in item else item['gpio_in'], GPIO.IN, pull_up_down=pud)
+            GPIO.add_event_detect(item['pin'] if 'pin' in item else item['gpio_in'], edge)
 
 def init_intervals():
     for name, item in ACTIONS.items():
