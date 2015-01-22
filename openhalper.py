@@ -189,7 +189,7 @@ def do_update():
 
     next = min([v for k, v in NEXT_UPDATES.items()])
     if next > now():
-        sleep(next - now())
+        sleep(max(next - now(), 0))
 
 def handle_request(item, **args):
     if item in CACHE:
