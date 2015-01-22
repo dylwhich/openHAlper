@@ -147,21 +147,8 @@ def do_action(name, **kwargs):
         elif "func" in item:
             result = item["func"](**kwargs)
         elif "gpio_in" in item or "type" in item and item['type'] == "gpio_in":
-            newstate = GPIO.input(item['pin'] if 'pin' in item else item['gpio_in'])
-            if item['state'] != newstate:
-                if item['method'].lower() == "put":
-                    method = requests.put
-                elif item['method'].lower() == "get":
-                    method = requests.get
-                elif item['method'].lower() == "post":
-                    method = requests.post
-                else:
-                    method = requests.get
-                payload = "OPEN" if item['state'] else "CLOSED"
-                print("state", newstate, item['state'])
-                print(method(item['url'], data=payload))
-            item['state'] = newstate
-            result = item['state']
+            result = GPIO.input(item['pin'] if 'pin' in item else item['gpio_in'])
+            item['state'] = result
         else:
             result = None
 
@@ -176,13 +163,13 @@ def do_action(name, **kwargs):
         # Reactions
 
         if "put" in item:
-            requests.put(item["put"], data=result)
+            requests.put(item["put"], data=str(result))
 
         if "get" in item:
-            requests.get(item["get"], data=result)
+            requests.get(item["get"], data=str(result))
 
         if "post" in item:
-            requests.post(item["post"], data=result)
+            requests.post(item["post"], data=str(result))
 
         if "gpio_out" in item or "type" in item and item['type'] == "gpio_out":
             if 'state' in kwargs:
