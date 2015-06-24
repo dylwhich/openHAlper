@@ -135,7 +135,7 @@ def do_action(name, **kwargs):
                 try:
                     args = [arg.format(kwargs) for arg in item["exec"]]
                 except:
-                    args = item["exec"].format(kwargs)
+                    args = item["exec"].format(**{k: v[0] for k,v in kwargs.items()})
 
                 result = subprocess.check_output(args, timeout=10, shell=(item["shell"] if "shell" in item else False)).decode('ascii')
             except subprocess.CalledProcessError as e:
