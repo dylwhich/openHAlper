@@ -99,6 +99,9 @@ def start_io():
         if 'type' in item and item['type'] == "gpio_out" or 'gpio_out' in item:
             GPIO.setup(item['pin'] if 'pin' in item else item['gpio_out'], GPIO.OUT)
 
+            if 'state' in item:
+                GPIO.output(item['pin'] if 'pin' in item else item['gpio_out'], item['state'])
+
         pud = GPIO.PUD_UP
         if 'pull' in item:
             if item['pull'].lower() == "down":
