@@ -166,13 +166,13 @@ def do_action(name, **kwargs):
 
         # Reactions
         if "put" in item:
-            requests.put(item["put"], data=str(result))
+            requests.put(item["put"].format(value=str(result)), data=str(result))
 
         if "get" in item:
-            requests.get(item["get"], data=str(result))
+            requests.get(item["get"].format(value=str(result)), data=str(result))
 
         if "post" in item:
-            requests.post(item["post"], data=str(result))
+            requests.post(item["post"].format(value=str(result)), data=str(result))
 
         if "gpio_out" in item or "type" in item and item['type'] == "gpio_out":
             if 'state' in kwargs:
